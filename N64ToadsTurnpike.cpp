@@ -1,4 +1,4 @@
-#include <ifstream>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -11,9 +11,21 @@ vector<int> faces[3];
 vector<float> normais[3];
 vector<float> texturas[2];
 
+vector<string> split(string texto, char sep){
+	vector<string> retorno;
+	stringstream ss(texto);
+	string token;
+
+	while(getline(ss, token, sep)) {
+	    retorno.push_back(token);
+	}
+
+	return retorno;
+}
+
 void carrega_pista(){
-	ifstream file;
-	file.open("N64 Toad's Turnpike.obj")
+	fstream file;
+	file.open("N64 Toad's Turnpike.obj");
 
 	if (file.is_open()){
 		string linha;
@@ -27,9 +39,9 @@ void carrega_pista(){
 			} else if (conteudo[0]=="f"){
 				for (int i = 1; i<conteudo.size(); i++){
 					vector<string> indices_face = split(conteudo[i], '/');
-					faces[0] = atoi(indices_face[0].c_str())-1; // vertice
-					faces[1] = atoi(indices_face[1].c_str()); // textura
-					faces[2] = atoi(indices_face[2].c_str()); // normal
+					faces[0].push_back(atoi(indices_face[0].c_str())-1); // vertice
+					faces[1].push_back(atoi(indices_face[1].c_str())); // textura
+					faces[2].push_back(atoi(indices_face[2].c_str())); // normal
 				}
 			} else if (conteudo[0]=="vn"){
 				for (int i = 1; i<conteudo.size(); i++){
@@ -55,16 +67,4 @@ void carrega_pista(){
 			}
 		}
 	}
-}
-
-vector<string> split(string texto, char sep){
-	vector<string> retorno;
-	stringstream ss(texto);
-	string token;
-
-	while(getline(ss, token, sep)) {
-	    retorno.push_back(token);
-	}
-
-	return retorno;
 }
