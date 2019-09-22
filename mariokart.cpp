@@ -77,19 +77,6 @@ void carrega_pista(){
 		}
 	}
 }
-// Inicializa��es de OpenGL que devem ser
-// executadas antes da exibi��o do desenho
-void Inicializa(){
-
-  // Define a janela de visualiza��o
-  glMatrixMode(GL_PROJECTION);
-
-  // Define o sistema de coordenadas
-  glOrtho(-75.0, 75.0, -75.0, 75.0, -75.0, 75.0);
-
-  // Define a cor de fundo da janela como azul
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-}
 
 // criar nova função para controle do teclado
 void keyboard (unsigned char key, int x, int y){
@@ -119,8 +106,65 @@ void mouse(int button, int state, int x, int y){
   }
 }
 
+void init(void) 
+{
+   glClearColor (0.0, 0.0, 0.0, 0.0);
+   //glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0);
+}
+
+void display(void)
+{
+   glClear (GL_COLOR_BUFFER_BIT);
+   glLoadIdentity (); 
+
+   glColor3f (1.0, 1.0, 1.0);
+
+   gluLookAt(0, 0, 0, 0, 0, 1, 0, 1, 0);
+
+  // Desenha um tri�ngulo
+  GLfloat vert[vertices[0].size()*3];
+
+  int j = 0;
+  for(int i = 0; i < vertices[0].size(); i++){
+    vert[j] = vertices[0][i];
+    vert[j+=1] = vertices[1][i];
+    vert[j+=1] = vertices[2][i];
+    j+=1;
+  }
+  
+  GLint face[faces[0].size()];
+
+  for(int i = 0; i < faces[0].size(); i++){
+    face[i] = faces[0][i];
+  }
+
+  /*GLfloat normal[normais[0].size() * 3];
+
+  j = 0;
+  for(int i = 0; i < normais[0].size(); i++){
+    normal[j] = normais[0][i];
+    normal[j++] = normais[1][i];
+    normal[j++] = normais[2][i];
+  }*/
+
+
+  glRotatef(angulo_x,1,0,0);
+  glRotatef(angulo_y,0,1,0);
+  glRotatef(angulo_z,0,0,1);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, vert);
+  glDrawElements(GL_TRIANGLES, faces[0].size(), GL_UNSIGNED_INT, face);
+  //glNormalPointer(GL_FLOAT, 0, normal);
+
+  
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glDisableClientState(GL_VERTEX_ARRAY);
+
+   glFlush ();
+}
+
 // Fun��o callback chamada para fazer o desenho
-void Desenha(){
+/*void Desenha(){
   // Limpa a janela de visualiza��o com a cor
   // de fundo especificada
   glClear(GL_COLOR_BUFFER_BIT);
@@ -129,22 +173,23 @@ void Desenha(){
   glColor3f(1.0, 1.0, 1.0);
 
   // Desenha um tri�ngulo
-  GLint vert[vertices[0].size()*3];
+  GLfloat vert[vertices[0].size()*3];
 
   int j = 0;
   for(int i = 0; i < vertices[0].size(); i++){
     vert[j] = vertices[0][i];
-    vert[j++] = vertices[1][i];
-    vert[j++] = vertices[2][i];
+    vert[j+=1] = vertices[1][i];
+    vert[j+=1] = vertices[2][i];
+    j+=1;
   }
   
-  GLubyte face[faces[0].size()];
+  GLint face[faces[0].size()];
 
   for(int i = 0; i < faces[0].size(); i++){
     face[i] = faces[0][i];
   }
 
-  GLint normal[normais[0].size() * 3];
+  /*GLfloat normal[normais[0].size() * 3];
 
   j = 0;
   for(int i = 0; i < normais[0].size(); i++){
@@ -158,9 +203,9 @@ void Desenha(){
   glRotatef(angulo_y,0,1,0);
   glRotatef(angulo_z,0,0,1);
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_INT, 0, vert);
-  glDrawElements(GL_TRIANGLES, faces[0].size(), GL_UNSIGNED_BYTE, face);
-  glNormalPointer(GL_INT, 0, normal);
+  glVertexPointer(3, GL_FLOAT, 0, vert);
+  glDrawElements(GL_TRIANGLES, faces[0].size(), GL_UNSIGNED_INT, face);
+  //glNormalPointer(GL_FLOAT, 0, normal);
 
   
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -168,34 +213,30 @@ void Desenha(){
 
   // Executa os comandos OpenGL para renderiza��o
   glFlush();
+}*/
+
+void reshape (int w, int h)
+{
+   glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
+   glMatrixMode (GL_PROJECTION);
+   glLoadIdentity ();
+   glFrustum(-450.0, 450.0, -450.0, 450.0, 1.0, 50.0);
+   glMatrixMode (GL_MODELVIEW);
 }
 
-// Programa principal
-int main(int argc, char** argv){
-
-  carrega_pista();
-
-  // Inicia GLUT e processa argumentos passados por linha de comandos
-  glutInit(&argc, argv);
-
-  // Avisa a GLUT que tipo de modo de exibi��o deve ser usado quando a janela � criada
-  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-
-  // Cria uma janela GLUT que permite a execu��o de comandos OpenGL
-  glutCreateWindow("Ol� Mundo!");
-
-  //glutKeyboardFunc(keyboard);
-  glutMouseFunc(mouse);
-
-  // Define a fun��o respons�vel por redesenhar a janela OpenGL sempre que necess�rio
-  glutDisplayFunc(Desenha);
-
-  // Inicializa��es de OpenGL executadas antes da exibi��o do desenho
-  Inicializa();
-
-  // Inicia o processamento de eventos de GLUT. O controle do programa
-  // passa a GLUT, que inicia o gerenciamento dos eventos
-  glutMainLoop();
-
-  return 0;
+int main(int argc, char** argv)
+{
+   carrega_pista();
+   glutInit(&argc, argv);
+   glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB);
+   glutInitWindowSize (256, 256); 
+   glutInitWindowPosition (100, 100);
+   glutCreateWindow ("Olá Mundo-Visualização");
+   glutKeyboardFunc(keyboard);
+   glutMouseFunc(mouse);
+   init ();
+   glutDisplayFunc(display); 
+   glutReshapeFunc(reshape);
+   glutMainLoop();
+   return 0;
 }
