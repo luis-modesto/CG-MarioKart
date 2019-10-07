@@ -109,7 +109,7 @@ void mouse(int button, int state, int x, int y){
 void init(void) 
 {
    glClearColor (0.0, 0.0, 0.0, 0.0);
-   //glOrtho(-2.0, 2.0, -2.0, 2.0, -2.0, 2.0);
+   glOrtho(-450.0, 450.0, -450.0, 450.0, -450.0, 450.0);
 }
 
 void display(void)
@@ -164,7 +164,7 @@ void display(void)
 }
 
 // Fun��o callback chamada para fazer o desenho
-/*void Desenha(){
+void Desenha(){
   // Limpa a janela de visualiza��o com a cor
   // de fundo especificada
   glClear(GL_COLOR_BUFFER_BIT);
@@ -189,7 +189,7 @@ void display(void)
     face[i] = faces[0][i];
   }
 
-  /*GLfloat normal[normais[0].size() * 3];
+  GLfloat normal[normais[0].size() * 3];
 
   j = 0;
   for(int i = 0; i < normais[0].size(); i++){
@@ -213,7 +213,7 @@ void display(void)
 
   // Executa os comandos OpenGL para renderiza��o
   glFlush();
-}*/
+}
 
 void reshape (int w, int h)
 {
@@ -235,8 +235,8 @@ int main(int argc, char** argv)
    glutKeyboardFunc(keyboard);
    glutMouseFunc(mouse);
    init ();
-   glutDisplayFunc(display); 
-   glutReshapeFunc(reshape);
+   glutDisplayFunc(Desenha); 
+   //glutReshapeFunc(reshape);
    glutMainLoop();
    return 0;
 }
