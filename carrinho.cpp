@@ -53,7 +53,7 @@ void mouse(int button, int state, int x, int y){
 void init(void) 
 {
    glClearColor (0.0, 0.0, 0.0, 0.0);
-   glOrtho(-100.0, 100.0, -100.0, 100.0, -100.0, 100.0);
+   glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
 }
 
 // Fun��o callback chamada para fazer o desenho
@@ -62,11 +62,10 @@ void Desenha(){
   // de fundo especificada
   glClear(GL_COLOR_BUFFER_BIT);
 
-  // Define a cor de desenho como vermelho
-  glColor3f(1.0, 1.0, 0.0);
+ glColor3f(1.0, 1.0, 0.0);
 
-  // Desenha um tri�ngulo
-  float radius = 20, halfLength = 2;
+ // Desenha um tri�ngulo
+  float radius = 1, halfLength = 0.1;
   int slices = 10000;
   for(int i=0; i<slices; i++) {
     float theta = ((float)i)*2.0*3.14;
@@ -82,9 +81,40 @@ void Desenha(){
     glEnd();
   }
 
-   glRotatef(angulo_x,1,0,0);
-  glRotatef(angulo_y,0,1,0);
-  glRotatef(angulo_z,0,0,1);
+glRotatef(45, 45, 0, 1);
+glTranslatef(0, -2, 0);
+
+  // Define a cor de desenho como vermelho
+  glColor3f(0.0, 0.0, 1.0);
+
+static GLint vertices[8*3] = { 
+    -1, 1, -1,
+    -1, 1, 1,
+    -1, -1, -1,
+    -1, -1, 1,
+    3, 1, -1,
+    3, 1, 1,
+    3, -1, -1, 
+    3, -1, 1
+ };
+
+ static GLubyte faces[6*4] = {
+     0, 5, 7, 3,
+     0, 4, 6, 2,
+     0, 1, 3, 2,
+     5, 4, 6, 7,
+     0, 4, 5, 1,
+     3, 7, 6, 2
+ };
+
+ glEnableClientState(GL_VERTEX_ARRAY);
+ glVertexPointer(3, GL_INT, 0, vertices);
+ glDrawElements(GL_QUADS, 24, GL_UNSIGNED_BYTE, faces);
+ glDisableClientState(GL_VERTEX_ARRAY);
+
+  //glRotatef(angulo_x,1,0,0);
+  //glRotatef(angulo_y,0,1,0);
+  //glRotatef(angulo_z,0,0,1);
   // Executa os comandos OpenGL para renderiza��o
   glFlush();
 }

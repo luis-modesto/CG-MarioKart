@@ -110,6 +110,16 @@ void init(void)
 {
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glOrtho(-450.0, 450.0, -450.0, 450.0, -450.0, 450.0);
+   GLfloat light_position[] = { -450.0, -450.0, 450.0, 0.0 };
+  glLightfv(GL_LIGHT0, GL_POSITION,light_position);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+
+  GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+
+  GLfloat mat_diffuse[]={1.0, 1.0, 1.0, 1.0};
+  glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse);
 }
 
 void display(void)
