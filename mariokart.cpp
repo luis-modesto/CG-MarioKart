@@ -5,6 +5,9 @@
 #include <sstream>
 #include <vector>
 #include <stdlib.h>
+#include <map>
+#include "load_bmp.h"
+#include<bits/stdc++.h>
 
 using namespace std;
 
@@ -18,6 +21,8 @@ vector<float> vertices[3];
 vector<int> faces[3];
 vector<float> normais[3];
 vector<float> texturas[2];
+vector<string> nomesTexturas;
+map<string, string> mapmtl;
 
 vector<string> split(string texto, char sep){
 	vector<string> retorno;
@@ -31,7 +36,32 @@ vector<string> split(string texto, char sep){
 	return retorno;
 }
 
+void carrega_mtl(){
+  fstream file;
+	file.open("N64 Toad's Turnpike.mtl");
+  string utilmtl;
+
+  if (file.is_open()){
+    string linha;
+		while(!file.eof()){
+      getline(file, linha);
+
+      vector<string> conteudo = split(linha, ' ');
+      if(conteudo[0] == "newmtl"){
+        utilmtl = conteudo[1];
+        transform(utilmtl.begin(), utilmtl.end(), utilmtl.begin(), ::tolower);
+      }
+      else if(conteudo[0] == "map_Kd"){
+        mapmtl[utilmtl] = conteudo[1];
+      }
+    }
+
+  }
+}
+
 void carrega_pista(){
+  carrega_mtl();
+  string utilmtl;
 	fstream file;
 	file.open("N64 Toad's Turnpike.obj");
 
@@ -46,6 +76,7 @@ void carrega_pista(){
 					vertices[i-1].push_back(atof(conteudo[i].c_str()));
 				}
 			} else if (conteudo[0]=="f"){
+        nomesTexturas.push_back(utilmtl);
 				for (int i = 1; i<conteudo.size(); i++){
 					vector<string> indices_face = split(conteudo[i], '/');
 					faces[0].push_back(atoi(indices_face[0].c_str())-1); // vertice
@@ -60,8 +91,9 @@ void carrega_pista(){
 				for (int i = 1; i<conteudo.size(); i++){
 					texturas[i-1].push_back(atof(conteudo[i].c_str()));
 				}
-			} else if (conteudo[0]=="usemtl" or conteudo[0]=="mtllib"){
-				// Deus quem sabe
+			} else if (conteudo[0]=="usemtl"){
+				// Deus já sabe
+        utilmtl = conteudo[1];
 			} else if (conteudo[0]=="o"){
 				// deve comecar outro objeto, nao sei
 			} else if (conteudo[0]=="s"){
@@ -106,14 +138,29 @@ void mouse(int button, int state, int x, int y){
   }
 }
 
+GLuint textureID[79];
 void init(void) 
 {
-   glClearColor (0.0, 0.0, 0.0, 0.0);
-   glOrtho(-450.0, 450.0, -450.0, 450.0, -450.0, 450.0);
-   GLfloat light_position[] = { -450.0, -450.0, 450.0, 0.0 };
+  glClearColor (0.0, 0.0, 0.0, 0.0);
+  glOrtho(-450.0, 450.0, -450.0, 450.0, -450.0, 450.0);
+  GLfloat light_position[] = { -450.0, -450.0, 450.0, 0.0 };
   glLightfv(GL_LIGHT0, GL_POSITION,light_position);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
+
+  glGenTextures(79, textureID);
+  unsigned int width, height;
+  unsigned char *data;
+
+  for(map<string, string>::iterator it = mapmtl.begin(); it != mapmtl.end(); it++){
+    glBindTexture(GL_TEXTURE_2D, textureID[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    data = loadBMP(it->second.c_str(), width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  }
+
+  glEnable(GL_TEXTURE_2D);
 
   GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
   glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -179,9 +226,6 @@ void Desenha(){
   // de fundo especificada
   glClear(GL_COLOR_BUFFER_BIT);
 
-  // Define a cor de desenho como vermelho
-  glColor3f(1.0, 1.0, 1.0);
-
   // Desenha um tri�ngulo
   GLfloat vert[vertices[0].size()*3];
 
@@ -208,6 +252,12 @@ void Desenha(){
     normal[j++] = normais[2][i];
   }
 
+  GLint textura[texturas[0].size()];
+
+  for(int i = 0; i < texturas[0].size(); i++){
+    textura[i] = texturas[0][i];
+  }
+
 
   glRotatef(angulo_x,1,0,0);
   glRotatef(angulo_y,0,1,0);
@@ -215,8 +265,6 @@ void Desenha(){
   glEnableClientState(GL_VERTEX_ARRAY);
   glVertexPointer(3, GL_FLOAT, 0, vert);
   glDrawElements(GL_TRIANGLES, faces[0].size(), GL_UNSIGNED_INT, face);
-  //glNormalPointer(GL_FLOAT, 0, normal);
-
   
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glDisableClientState(GL_VERTEX_ARRAY);
