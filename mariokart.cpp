@@ -23,6 +23,7 @@ vector<float> normais[3];
 vector<float> texturas[2];
 vector<string> nomesTexturas;
 map<string, string> mapmtl;
+map<string, int> nomeIdMtl;
 
 vector<string> split(string texto, char sep){
 	vector<string> retorno;
@@ -40,6 +41,7 @@ void carrega_mtl(){
   fstream file;
 	file.open("N64 Toad's Turnpike.mtl");
   string utilmtl;
+  int id = 0;
 
   if (file.is_open()){
     string linha;
@@ -49,10 +51,13 @@ void carrega_mtl(){
       vector<string> conteudo = split(linha, ' ');
       if(conteudo[0] == "newmtl"){
         utilmtl = conteudo[1];
-        transform(utilmtl.begin(), utilmtl.end(), utilmtl.begin(), ::tolower);
+        nomeIdMtl[utilmtl] = id;
+        id++;
       }
       else if(conteudo[0] == "map_Kd"){
-        mapmtl[utilmtl] = conteudo[1];
+        string nome_lower = conteudo[1];
+        transform(nome_lower.begin(), nome_lower.end(), nome_lower.begin(), ::tolower);
+        mapmtl[utilmtl] = nome_lower;
       }
     }
 
@@ -76,12 +81,14 @@ void carrega_pista(){
 					vertices[i-1].push_back(atof(conteudo[i].c_str()));
 				}
 			} else if (conteudo[0]=="f"){
-        nomesTexturas.push_back(utilmtl);
 				for (int i = 1; i<conteudo.size(); i++){
 					vector<string> indices_face = split(conteudo[i], '/');
 					faces[0].push_back(atoi(indices_face[0].c_str())-1); // vertice
+          nomesTexturas.push_back(utilmtl);
 					faces[1].push_back(atoi(indices_face[1].c_str())); // textura
+          nomesTexturas.push_back(utilmtl);
 					faces[2].push_back(atoi(indices_face[2].c_str())); // normal
+          nomesTexturas.push_back(utilmtl);
 				}
 			} else if (conteudo[0]=="vn"){
 				for (int i = 1; i<conteudo.size(); i++){
@@ -143,81 +150,31 @@ void init(void)
 {
   glClearColor (0.0, 0.0, 0.0, 0.0);
   glOrtho(-450.0, 450.0, -450.0, 450.0, -450.0, 450.0);
-  GLfloat light_position[] = { -450.0, -450.0, 450.0, 0.0 };
-  glLightfv(GL_LIGHT0, GL_POSITION,light_position);
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
+  // GLfloat light_position[] = { -450.0, -450.0, 450.0, 0.0 };
+  // glLightfv(GL_LIGHT0, GL_POSITION,light_position);
+  // glEnable(GL_LIGHTING);
+  // glEnable(GL_LIGHT0);
 
   glGenTextures(79, textureID);
   unsigned int width, height;
   unsigned char *data;
 
   for(map<string, string>::iterator it = mapmtl.begin(); it != mapmtl.end(); it++){
-    glBindTexture(GL_TEXTURE_2D, textureID[0]);
+    glBindTexture(GL_TEXTURE_2D, textureID[nomeIdMtl[it->first]]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    data = loadBMP(it->second.c_str(), width, height);
+    string caminho = "bmp/" + it->second;
+    data = loadBMP(caminho.c_str(), width, height);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
   }
 
   glEnable(GL_TEXTURE_2D);
 
-  GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  // GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
+  // glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 
-  GLfloat mat_diffuse[]={1.0, 1.0, 1.0, 1.0};
-  glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse);
-}
-
-void display(void)
-{
-   glClear (GL_COLOR_BUFFER_BIT);
-   glLoadIdentity (); 
-
-   glColor3f (1.0, 1.0, 1.0);
-
-   gluLookAt(0, 0, 0, 0, 0, 1, 0, 1, 0);
-
-  // Desenha um tri�ngulo
-  GLfloat vert[vertices[0].size()*3];
-
-  int j = 0;
-  for(int i = 0; i < vertices[0].size(); i++){
-    vert[j] = vertices[0][i];
-    vert[j+=1] = vertices[1][i];
-    vert[j+=1] = vertices[2][i];
-    j+=1;
-  }
-  
-  GLint face[faces[0].size()];
-
-  for(int i = 0; i < faces[0].size(); i++){
-    face[i] = faces[0][i];
-  }
-
-  /*GLfloat normal[normais[0].size() * 3];
-
-  j = 0;
-  for(int i = 0; i < normais[0].size(); i++){
-    normal[j] = normais[0][i];
-    normal[j++] = normais[1][i];
-    normal[j++] = normais[2][i];
-  }*/
-
-
-  glRotatef(angulo_x,1,0,0);
-  glRotatef(angulo_y,0,1,0);
-  glRotatef(angulo_z,0,0,1);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, 0, vert);
-  glDrawElements(GL_TRIANGLES, faces[0].size(), GL_UNSIGNED_INT, face);
-  //glNormalPointer(GL_FLOAT, 0, normal);
-
-  
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glDisableClientState(GL_VERTEX_ARRAY);
-
-   glFlush ();
+  // GLfloat mat_diffuse[]={1.0, 1.0, 1.0, 1.0};
+  // glMaterialfv( GL_FRONT, GL_DIFFUSE, mat_diffuse);
 }
 
 // Fun��o callback chamada para fazer o desenho
@@ -225,9 +182,24 @@ void Desenha(){
   // Limpa a janela de visualiza��o com a cor
   // de fundo especificada
   glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 1.0, 1.0);
+
+  for(int i = 0; i < faces[0].size(); i+=3){
+    glBindTexture(GL_TEXTURE_2D, textureID[nomeIdMtl[nomesTexturas[i]]]);
+    glBegin(GL_TRIANGLES);
+      glTexCoord2f(texturas[0][faces[1][i]], texturas[1][faces[1][i]]);
+      glVertex3f(vertices[0][faces[0][i]], vertices[1][faces[0][i]], vertices[2][faces[0][i]]);
+
+      glTexCoord2f(texturas[0][faces[1][i+1]], texturas[1][faces[1][i+1]]); 
+      glVertex3f(vertices[0][faces[0][i+1]], vertices[1][faces[0][i+1]], vertices[2][faces[0][i+1]]);
+
+      glTexCoord2f(texturas[0][faces[1][i+2]], texturas[1][faces[1][i+2]]);
+      glVertex3f(vertices[0][faces[0][i+2]], vertices[1][faces[0][i+2]], vertices[2][faces[0][i+2]]); 
+    glEnd();
+  }
 
   // Desenha um tri�ngulo
-  GLfloat vert[vertices[0].size()*3];
+  /*GLfloat vert[vertices[0].size()*3];
 
   int j = 0;
   for(int i = 0; i < vertices[0].size(); i++){
@@ -269,7 +241,10 @@ void Desenha(){
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glDisableClientState(GL_VERTEX_ARRAY);
 
-  // Executa os comandos OpenGL para renderiza��o
+  // Executa os comandos OpenGL para renderiza��o*/
+  glRotatef(angulo_x,1,0,0);
+  glRotatef(angulo_y,0,1,0);
+  glRotatef(angulo_z,0,0,1);
   glFlush();
 }
 
